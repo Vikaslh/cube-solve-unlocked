@@ -18,6 +18,22 @@ export default function Capture() {
   const [currentFace, setCurrentFace] = useState(0);
   const [capturedFaces, setCapturedFaces] = useState<Set<number>>(new Set());
   const [images, setImages] = useState<{[key: number]: string}>({});
+  const [detectedColors, setDetectedColors] = useState<{[key: number]: string[]}>({});
+
+  // Simulate color detection from images
+  const detectColorsFromImage = (faceIndex: number) => {
+    // Simulate color detection - in real app this would use CV/AI
+    const colorMaps = [
+      Array(9).fill('#ffffff'), // Front - white
+      Array(9).fill('#eab308'), // Back - yellow  
+      Array(9).fill('#f97316'), // Left - orange
+      Array(9).fill('#ef4444'), // Right - red
+      Array(9).fill('#22c55e'), // Up - green
+      Array(9).fill('#3b82f6')  // Down - blue
+    ];
+    
+    return colorMaps[faceIndex];
+  };
 
   const handleCapture = () => {
     // Simulate image capture
@@ -29,6 +45,13 @@ export default function Capture() {
     setImages(prev => ({
       ...prev,
       [currentFace]: `https://picsum.photos/300/300?random=${currentFace}`
+    }));
+    
+    // Detect colors from the captured image
+    const colors = detectColorsFromImage(currentFace);
+    setDetectedColors(prev => ({
+      ...prev,
+      [currentFace]: colors
     }));
     
     // Auto-advance to next face
@@ -49,6 +72,13 @@ export default function Capture() {
       const newCapturedFaces = new Set(capturedFaces);
       newCapturedFaces.add(currentFace);
       setCapturedFaces(newCapturedFaces);
+      
+      // Detect colors from uploaded image
+      const colors = detectColorsFromImage(currentFace);
+      setDetectedColors(prev => ({
+        ...prev,
+        [currentFace]: colors
+      }));
       
       if (currentFace < cubeFaces.length - 1) {
         setCurrentFace(currentFace + 1);
@@ -215,7 +245,7 @@ export default function Capture() {
                   <Button 
                     variant="outline" 
                     className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                    onClick={() => navigate("/solve")}
+                    onClick={() => navigate("/solve", { state: { cubeColors: detectedColors } })}
                   >
                     Analyze & Solve
                     <ArrowRight className="w-4 h-4 ml-2" />

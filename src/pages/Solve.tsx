@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Play, Pause, SkipForward, SkipBack, RotateCcw } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Mock solving steps
 const solvingSteps = [
@@ -18,10 +18,24 @@ const solvingSteps = [
 
 export default function Solve() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [solutionFound, setSolutionFound] = useState(false);
+  const [cubeRotation, setCubeRotation] = useState({ x: -15, y: 0, z: 0 });
+  const [isAnimatingMove, setIsAnimatingMove] = useState(false);
+  
+  // Get cube colors from capture page or use defaults
+  const capturedColors = location.state?.cubeColors;
+  const [cubeState, setCubeState] = useState({
+    front: capturedColors?.[0] || Array(9).fill('#ef4444'), // red
+    back: capturedColors?.[1] || Array(9).fill('#22c55e'),  // green
+    left: capturedColors?.[2] || Array(9).fill('#f97316'),  // orange
+    right: capturedColors?.[3] || Array(9).fill('#3b82f6'), // blue
+    up: capturedColors?.[4] || Array(9).fill('#ffffff'),    // white
+    down: capturedColors?.[5] || Array(9).fill('#eab308')   // yellow
+  });
 
   useEffect(() => {
     // Simulate analysis
@@ -33,15 +47,46 @@ export default function Solve() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Animate move execution
+  const animateMove = (move: string) => {
+    setIsAnimatingMove(true);
+    
+    // Determine rotation based on move
+    let newRotation = { ...cubeRotation };
+    if (move.includes('R')) {
+      newRotation.y += move.includes("'") ? -90 : 90;
+    } else if (move.includes('L')) {
+      newRotation.y += move.includes("'") ? 90 : -90;
+    } else if (move.includes('U')) {
+      newRotation.x += move.includes("'") ? 90 : -90;
+    } else if (move.includes('D')) {
+      newRotation.x += move.includes("'") ? -90 : 90;
+    } else if (move.includes('F')) {
+      newRotation.z += move.includes("'") ? -90 : 90;
+    } else if (move.includes('B')) {
+      newRotation.z += move.includes("'") ? 90 : -90;
+    }
+    
+    setCubeRotation(newRotation);
+    
+    setTimeout(() => {
+      setIsAnimatingMove(false);
+    }, 800);
+  };
+
   useEffect(() => {
     if (isPlaying && solutionFound) {
       const interval = setInterval(() => {
         if (currentStep < solvingSteps.length - 1) {
-          setCurrentStep(prev => prev + 1);
+          setCurrentStep(prev => {
+            const nextStep = prev + 1;
+            animateMove(solvingSteps[nextStep]);
+            return nextStep;
+          });
         } else {
           setIsPlaying(false);
         }
-      }, 2000);
+      }, 1500);
 
       return () => clearInterval(interval);
     }
@@ -53,13 +98,17 @@ export default function Solve() {
 
   const handleNext = () => {
     if (currentStep < solvingSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      animateMove(solvingSteps[nextStep]);
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      animateMove(solvingSteps[prevStep]);
     }
   };
 
@@ -107,77 +156,139 @@ export default function Solve() {
                   </div>
                 ) : (
                   <div className="text-center space-y-6">
-                    {/* Enhanced 3D cube representation with move-specific animations */}
-                    <div className="relative mx-auto" style={{ perspective: "600px" }}>
-                      <div className={`relative w-40 h-40 mx-auto transition-all duration-500 ${
-                        isPlaying ? 'animate-cube-spin' : 'animate-float'
-                      }`}>
-                        {/* Top face - White */}
-                        <div className={`absolute w-40 h-40 bg-cube-white border-2 border-white/30 transition-all duration-300 ${
-                          solvingSteps[currentStep].includes('U') ? 'animate-pulse shadow-glow' : ''
-                        }`} 
-                             style={{ transform: "rotateX(90deg) translateZ(80px)" }}>
-                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
-                            {[...Array(9)].map((_, i) => (
-                              <div key={i} className="bg-white/90 rounded-sm border border-gray-300" />
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {/* Front face - Red */}
-                        <div className={`absolute w-40 h-40 bg-cube-red border-2 border-white/30 transition-all duration-300 ${
-                          solvingSteps[currentStep].includes('F') ? 'animate-pulse shadow-glow' : ''
+                    {/* Realistic 3D cube with move-based rotation animations */}
+                    <div className="relative mx-auto" style={{ perspective: "800px" }}>
+                      <div 
+                        className={`relative w-48 h-48 mx-auto transition-all duration-800 ease-in-out ${
+                          isAnimatingMove ? 'scale-110' : ''
                         }`}
-                             style={{ transform: "translateZ(80px)" }}>
-                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
-                            {[...Array(9)].map((_, i) => (
-                              <div key={i} className="bg-red-500 rounded-sm border border-red-600" />
+                        style={{ 
+                          transform: `rotateX(${cubeRotation.x}deg) rotateY(${cubeRotation.y}deg) rotateZ(${cubeRotation.z}deg)`,
+                          transformStyle: 'preserve-3d'
+                        }}
+                      >
+                        {/* Top face - Up */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('U') ? 'shadow-intense animate-pulse' : ''
+                          }`} 
+                          style={{ 
+                            transform: "rotateX(90deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.up.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
                             ))}
                           </div>
                         </div>
                         
-                        {/* Right face - Blue */}
-                        <div className={`absolute w-40 h-40 bg-cube-blue border-2 border-white/30 transition-all duration-300 ${
-                          solvingSteps[currentStep].includes('R') ? 'animate-pulse shadow-glow' : ''
-                        }`}
-                             style={{ transform: "rotateY(90deg) translateZ(80px)" }}>
-                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
-                            {[...Array(9)].map((_, i) => (
-                              <div key={i} className="bg-blue-500 rounded-sm border border-blue-600" />
+                        {/* Front face */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('F') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.front.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
                             ))}
                           </div>
                         </div>
                         
-                        {/* Left face - Orange */}
-                        <div className={`absolute w-40 h-40 bg-cube-orange border-2 border-white/30 transition-all duration-300 ${
-                          solvingSteps[currentStep].includes('L') ? 'animate-pulse shadow-glow' : ''
-                        }`}
-                             style={{ transform: "rotateY(-90deg) translateZ(80px)" }}>
-                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
-                            {[...Array(9)].map((_, i) => (
-                              <div key={i} className="bg-orange-500 rounded-sm border border-orange-600" />
+                        {/* Right face */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('R') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "rotateY(90deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.right.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
                             ))}
                           </div>
                         </div>
                         
-                        {/* Bottom face - Yellow */}
-                        <div className={`absolute w-40 h-40 bg-cube-yellow border-2 border-white/30 transition-all duration-300 ${
-                          solvingSteps[currentStep].includes('D') ? 'animate-pulse shadow-glow' : ''
-                        }`}
-                             style={{ transform: "rotateX(-90deg) translateZ(80px)" }}>
-                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
-                            {[...Array(9)].map((_, i) => (
-                              <div key={i} className="bg-yellow-400 rounded-sm border border-yellow-500" />
+                        {/* Left face */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('L') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "rotateY(-90deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.left.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
                             ))}
                           </div>
                         </div>
                         
-                        {/* Back face - Green */}
-                        <div className={`absolute w-40 h-40 bg-cube-green border-2 border-white/30 transition-all duration-300`}
-                             style={{ transform: "rotateY(180deg) translateZ(80px)" }}>
-                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
-                            {[...Array(9)].map((_, i) => (
-                              <div key={i} className="bg-green-500 rounded-sm border border-green-600" />
+                        {/* Bottom face - Down */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('D') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "rotateX(-90deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.down.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Back face */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('B') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "rotateY(180deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.back.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
                             ))}
                           </div>
                         </div>
