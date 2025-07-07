@@ -106,25 +106,96 @@ export default function Solve() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center space-y-4">
-                    {/* Simplified 3D cube representation */}
-                    <div className="relative mx-auto" style={{ perspective: "400px" }}>
-                      <div className="relative w-32 h-32 mx-auto animate-cube-spin">
-                        {/* Top face */}
-                        <div className="absolute w-32 h-32 bg-cube-white border-2 border-white/20 transform -rotate-x-90 translate-z-16" 
-                             style={{ transform: "rotateX(90deg) translateZ(64px)" }} />
-                        {/* Front face */}
-                        <div className="absolute w-32 h-32 bg-cube-red border-2 border-white/20"
-                             style={{ transform: "translateZ(64px)" }} />
-                        {/* Right face */}
-                        <div className="absolute w-32 h-32 bg-cube-blue border-2 border-white/20"
-                             style={{ transform: "rotateY(90deg) translateZ(64px)" }} />
+                  <div className="text-center space-y-6">
+                    {/* Enhanced 3D cube representation with move-specific animations */}
+                    <div className="relative mx-auto" style={{ perspective: "600px" }}>
+                      <div className={`relative w-40 h-40 mx-auto transition-all duration-500 ${
+                        isPlaying ? 'animate-cube-spin' : 'animate-float'
+                      }`}>
+                        {/* Top face - White */}
+                        <div className={`absolute w-40 h-40 bg-cube-white border-2 border-white/30 transition-all duration-300 ${
+                          solvingSteps[currentStep].includes('U') ? 'animate-pulse shadow-glow' : ''
+                        }`} 
+                             style={{ transform: "rotateX(90deg) translateZ(80px)" }}>
+                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
+                            {[...Array(9)].map((_, i) => (
+                              <div key={i} className="bg-white/90 rounded-sm border border-gray-300" />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Front face - Red */}
+                        <div className={`absolute w-40 h-40 bg-cube-red border-2 border-white/30 transition-all duration-300 ${
+                          solvingSteps[currentStep].includes('F') ? 'animate-pulse shadow-glow' : ''
+                        }`}
+                             style={{ transform: "translateZ(80px)" }}>
+                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
+                            {[...Array(9)].map((_, i) => (
+                              <div key={i} className="bg-red-500 rounded-sm border border-red-600" />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Right face - Blue */}
+                        <div className={`absolute w-40 h-40 bg-cube-blue border-2 border-white/30 transition-all duration-300 ${
+                          solvingSteps[currentStep].includes('R') ? 'animate-pulse shadow-glow' : ''
+                        }`}
+                             style={{ transform: "rotateY(90deg) translateZ(80px)" }}>
+                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
+                            {[...Array(9)].map((_, i) => (
+                              <div key={i} className="bg-blue-500 rounded-sm border border-blue-600" />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Left face - Orange */}
+                        <div className={`absolute w-40 h-40 bg-cube-orange border-2 border-white/30 transition-all duration-300 ${
+                          solvingSteps[currentStep].includes('L') ? 'animate-pulse shadow-glow' : ''
+                        }`}
+                             style={{ transform: "rotateY(-90deg) translateZ(80px)" }}>
+                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
+                            {[...Array(9)].map((_, i) => (
+                              <div key={i} className="bg-orange-500 rounded-sm border border-orange-600" />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Bottom face - Yellow */}
+                        <div className={`absolute w-40 h-40 bg-cube-yellow border-2 border-white/30 transition-all duration-300 ${
+                          solvingSteps[currentStep].includes('D') ? 'animate-pulse shadow-glow' : ''
+                        }`}
+                             style={{ transform: "rotateX(-90deg) translateZ(80px)" }}>
+                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
+                            {[...Array(9)].map((_, i) => (
+                              <div key={i} className="bg-yellow-400 rounded-sm border border-yellow-500" />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Back face - Green */}
+                        <div className={`absolute w-40 h-40 bg-cube-green border-2 border-white/30 transition-all duration-300`}
+                             style={{ transform: "rotateY(180deg) translateZ(80px)" }}>
+                          <div className="grid grid-cols-3 gap-1 p-2 h-full">
+                            {[...Array(9)].map((_, i) => (
+                              <div key={i} className="bg-green-500 rounded-sm border border-green-600" />
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <p className="text-sm text-accent font-semibold">Current Move:</p>
-                      <p className="text-2xl font-bold text-primary">{solvingSteps[currentStep]}</p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+                        <p className="text-sm text-accent font-semibold">Current Move</p>
+                        <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+                      </div>
+                      <div className="bg-gradient-card rounded-lg p-4 border border-primary/20">
+                        <p className="text-3xl font-bold text-primary animate-scale-in">{solvingSteps[currentStep]}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {solvingSteps[currentStep].includes("'") ? "Counter-clockwise rotation" : "Clockwise rotation"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
