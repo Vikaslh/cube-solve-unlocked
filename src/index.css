@@ -2,41 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* CubeSolver.ai Design System - Cube-inspired colors and gradients */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Colors */
+    --background: 220 25% 6%;
+    --foreground: 220 20% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Cards and Surfaces */
+    --card: 220 25% 8%;
+    --card-foreground: 220 20% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 25% 8%;
+    --popover-foreground: 220 20% 95%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Deep Blue/Purple */
+    --primary: 252 83% 57%;
+    --primary-foreground: 220 20% 95%;
+    --primary-glow: 252 83% 67%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Dark surface */
+    --secondary: 220 25% 12%;
+    --secondary-foreground: 220 20% 95%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted tones */
+    --muted: 220 25% 12%;
+    --muted-foreground: 220 15% 65%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Neon highlight */
+    --accent: 170 100% 50%;
+    --accent-foreground: 220 25% 6%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 20% 95%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Borders and inputs */
+    --border: 220 25% 15%;
+    --input: 220 25% 12%;
+    --ring: 252 83% 57%;
 
-    --radius: 0.5rem;
+    /* Cube face colors */
+    --cube-red: 0 100% 50%;
+    --cube-green: 120 100% 40%;
+    --cube-blue: 220 100% 50%;
+    --cube-orange: 30 100% 50%;
+    --cube-yellow: 60 100% 50%;
+    --cube-white: 0 0% 95%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(252 83% 57%), hsl(252 83% 67%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 25% 6%), hsl(252 83% 20%));
+    --gradient-card: linear-gradient(135deg, hsl(220 25% 8%), hsl(220 25% 12%));
+    --gradient-cube: linear-gradient(135deg, hsl(252 83% 57%), hsl(170 100% 50%));
+
+    /* Shadows and effects */
+    --shadow-glow: 0 0 40px hsl(252 83% 57% / 0.3);
+    --shadow-card: 0 10px 30px -10px hsl(220 25% 3% / 0.5);
+    --shadow-intense: 0 0 60px hsl(252 83% 57% / 0.5);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
