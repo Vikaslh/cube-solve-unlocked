@@ -20,14 +20,11 @@ export const Navigation = () => {
           
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
-              Features
+            <a href="/solve-from-start" className="text-muted-foreground hover:text-primary transition-colors">
+              Solve from Start
             </a>
             <a href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
               How it Works
-            </a>
-            <a href="#about" className="text-muted-foreground hover:text-primary transition-colors">
-              About
             </a>
             <Button variant="outline" size="sm" onClick={() => window.location.href = '/capture'}>
               Try Demo
@@ -50,14 +47,11 @@ export const Navigation = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-primary/20 animate-fade-in">
             <div className="flex flex-col space-y-4">
-              <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
-                Features
+              <a href="/solve-from-start" className="text-muted-foreground hover:text-primary transition-colors">
+                Solve from Start
               </a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
                 How it Works
-              </a>
-              <a href="#about" className="text-muted-foreground hover:text-primary transition-colors">
-                About
               </a>
               <Button variant="outline" size="sm" className="self-start" onClick={() => window.location.href = '/capture'}>
                 Try Demo
