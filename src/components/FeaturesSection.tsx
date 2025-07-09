@@ -30,7 +30,7 @@ const features = [
 
 export const FeaturesSection = () => {
   return (
-    <section id="how-it-works" className="py-20 bg-background relative">
+    <section className="py-20 bg-background relative">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5" />
       

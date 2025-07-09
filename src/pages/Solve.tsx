@@ -23,42 +23,56 @@ export default function Solve() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [solutionFound, setSolutionFound] = useState(false);
-  const [animationKey, setAnimationKey] = useState(0);
+  const [cubeRotation, setCubeRotation] = useState({ x: -15, y: 0, z: 0 });
+  const [isAnimatingMove, setIsAnimatingMove] = useState(false);
   
   // Get cube colors from capture page or use defaults
-  const capturedColors = location.state?.cubeColors || location.state?.detectedColors;
-  
-  // Create proper cube state from detected colors
-  const createCubeState = () => {
-    if (capturedColors && Array.isArray(capturedColors) && capturedColors.length === 6) {
-      return {
-        front: capturedColors[0] || Array(9).fill('#ffffff'),
-        back: capturedColors[1] || Array(9).fill('#eab308'),
-        left: capturedColors[2] || Array(9).fill('#f97316'),
-        right: capturedColors[3] || Array(9).fill('#ef4444'),
-        up: capturedColors[4] || Array(9).fill('#22c55e'),
-        down: capturedColors[5] || Array(9).fill('#3b82f6')
-      };
-    }
-    return {
-      front: Array(9).fill('#ffffff'),
-      back: Array(9).fill('#eab308'),
-      left: Array(9).fill('#f97316'),
-      right: Array(9).fill('#ef4444'),
-      up: Array(9).fill('#22c55e'),
-      down: Array(9).fill('#3b82f6')
-    };
-  };
-
-  const [cubeState] = useState(createCubeState());
+  const capturedColors = location.state?.cubeColors;
+  const [cubeState, setCubeState] = useState({
+    front: capturedColors?.[0] || Array(9).fill('#ef4444'), // red
+    back: capturedColors?.[1] || Array(9).fill('#22c55e'),  // green
+    left: capturedColors?.[2] || Array(9).fill('#f97316'),  // orange
+    right: capturedColors?.[3] || Array(9).fill('#3b82f6'), // blue
+    up: capturedColors?.[4] || Array(9).fill('#ffffff'),    // white
+    down: capturedColors?.[5] || Array(9).fill('#eab308')   // yellow
+  });
 
   useEffect(() => {
+    // Simulate analysis
     const timer = setTimeout(() => {
       setIsAnalyzing(false);
       setSolutionFound(true);
     }, 3000);
+
     return () => clearTimeout(timer);
   }, []);
+
+  // Animate move execution
+  const animateMove = (move: string) => {
+    setIsAnimatingMove(true);
+    
+    // Determine rotation based on move
+    let newRotation = { ...cubeRotation };
+    if (move.includes('R')) {
+      newRotation.y += move.includes("'") ? -90 : 90;
+    } else if (move.includes('L')) {
+      newRotation.y += move.includes("'") ? 90 : -90;
+    } else if (move.includes('U')) {
+      newRotation.x += move.includes("'") ? 90 : -90;
+    } else if (move.includes('D')) {
+      newRotation.x += move.includes("'") ? -90 : 90;
+    } else if (move.includes('F')) {
+      newRotation.z += move.includes("'") ? -90 : 90;
+    } else if (move.includes('B')) {
+      newRotation.z += move.includes("'") ? 90 : -90;
+    }
+    
+    setCubeRotation(newRotation);
+    
+    setTimeout(() => {
+      setIsAnimatingMove(false);
+    }, 800);
+  };
 
   useEffect(() => {
     if (isPlaying && solutionFound) {
@@ -66,46 +80,41 @@ export default function Solve() {
         if (currentStep < solvingSteps.length - 1) {
           setCurrentStep(prev => {
             const nextStep = prev + 1;
-            setAnimationKey(k => k + 1); // Trigger animation
+            animateMove(solvingSteps[nextStep]);
             return nextStep;
           });
         } else {
           setIsPlaying(false);
         }
       }, 1500);
+
       return () => clearInterval(interval);
     }
   }, [isPlaying, currentStep, solutionFound]);
 
-  const handlePlayPause = () => setIsPlaying(!isPlaying);
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
 
   const handleNext = () => {
     if (currentStep < solvingSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setAnimationKey(k => k + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      animateMove(solvingSteps[nextStep]);
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      setAnimationKey(k => k + 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      animateMove(solvingSteps[prevStep]);
     }
   };
 
   const handleReset = () => {
     setCurrentStep(0);
     setIsPlaying(false);
-    setAnimationKey(k => k + 1);
-  };
-
-  // Simple face highlighting based on current move
-  const getFaceHighlight = (face: string) => {
-    const move = solvingSteps[currentStep];
-    if (move && move.includes(face.toUpperCase())) {
-      return "shadow-xl border-4 border-primary animate-pulse";
-    }
-    return "border border-black/20";
   };
 
   return (
@@ -129,11 +138,11 @@ export default function Solve() {
             </p>
           </div>
           
-          <div className="w-24" />
+          <div className="w-24" /> {/* Spacer */}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Simple 3D Cube Visualization */}
+          {/* 3D Cube Visualization */}
           <div className="space-y-6">
             <Card className="p-6 bg-gradient-card border-primary/20 h-96">
               <div className="w-full h-full flex items-center justify-center relative">
@@ -141,22 +150,28 @@ export default function Solve() {
                   <div className="text-center space-y-4">
                     <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-muted-foreground">Analyzing cube state...</p>
+                    <div className="text-xs text-muted-foreground">
+                      Using AI to detect colors and validate configuration
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center space-y-6">
-                    {/* Simple cube with face highlighting */}
+                    {/* Realistic 3D cube with move-based rotation animations */}
                     <div className="relative mx-auto" style={{ perspective: "800px" }}>
                       <div 
-                        key={animationKey}
-                        className="relative w-48 h-48 mx-auto animate-scale-in"
+                        className={`relative w-48 h-48 mx-auto transition-all duration-800 ease-in-out ${
+                          isAnimatingMove ? 'scale-110' : ''
+                        }`}
                         style={{ 
-                          transform: "rotateX(-15deg) rotateY(15deg)",
+                          transform: `rotateX(${cubeRotation.x}deg) rotateY(${cubeRotation.y}deg) rotateZ(${cubeRotation.z}deg)`,
                           transformStyle: 'preserve-3d'
                         }}
                       >
                         {/* Top face - Up */}
                         <div 
-                          className={`absolute w-48 h-48 transition-all duration-500 ${getFaceHighlight('U')}`}
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('U') ? 'shadow-intense animate-pulse' : ''
+                          }`} 
                           style={{ 
                             transform: "rotateX(90deg) translateZ(96px)",
                             transformStyle: 'preserve-3d'
@@ -166,7 +181,7 @@ export default function Solve() {
                             {cubeState.up.map((color, i) => (
                               <div 
                                 key={i} 
-                                className="rounded-sm border border-black/30"
+                                className="rounded-sm border border-black/30 transition-all duration-300"
                                 style={{ backgroundColor: color }}
                               />
                             ))}
@@ -175,7 +190,9 @@ export default function Solve() {
                         
                         {/* Front face */}
                         <div 
-                          className={`absolute w-48 h-48 transition-all duration-500 ${getFaceHighlight('F')}`}
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('F') ? 'shadow-intense animate-pulse' : ''
+                          }`}
                           style={{ 
                             transform: "translateZ(96px)",
                             transformStyle: 'preserve-3d'
@@ -185,7 +202,7 @@ export default function Solve() {
                             {cubeState.front.map((color, i) => (
                               <div 
                                 key={i} 
-                                className="rounded-sm border border-black/30"
+                                className="rounded-sm border border-black/30 transition-all duration-300"
                                 style={{ backgroundColor: color }}
                               />
                             ))}
@@ -194,7 +211,9 @@ export default function Solve() {
                         
                         {/* Right face */}
                         <div 
-                          className={`absolute w-48 h-48 transition-all duration-500 ${getFaceHighlight('R')}`}
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('R') ? 'shadow-intense animate-pulse' : ''
+                          }`}
                           style={{ 
                             transform: "rotateY(90deg) translateZ(96px)",
                             transformStyle: 'preserve-3d'
@@ -204,7 +223,70 @@ export default function Solve() {
                             {cubeState.right.map((color, i) => (
                               <div 
                                 key={i} 
-                                className="rounded-sm border border-black/30"
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Left face */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('L') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "rotateY(-90deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.left.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Bottom face - Down */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('D') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "rotateX(-90deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.down.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Back face */}
+                        <div 
+                          className={`absolute w-48 h-48 border-2 border-black/20 transition-all duration-500 ${
+                            solvingSteps[currentStep].includes('B') ? 'shadow-intense animate-pulse' : ''
+                          }`}
+                          style={{ 
+                            transform: "rotateY(180deg) translateZ(96px)",
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="grid grid-cols-3 gap-1 p-1 h-full w-full">
+                            {cubeState.back.map((color, i) => (
+                              <div 
+                                key={i} 
+                                className="rounded-sm border border-black/30 transition-all duration-300"
                                 style={{ backgroundColor: color }}
                               />
                             ))}

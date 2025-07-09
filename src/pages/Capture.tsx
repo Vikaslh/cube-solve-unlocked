@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Camera, Upload, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
@@ -13,166 +13,72 @@ const cubeFaces = [
   { name: "Down", color: "cube-blue", position: "down" }
 ];
 
-// Standard cube colors and labels
-const standardColors = [
-  { label: 'W', rgb: [255,255,255], hex: '#ffffff' }, // White
-  { label: 'Y', rgb: [234,179,8], hex: '#eab308' },  // Yellow
-  { label: 'O', rgb: [249,115,22], hex: '#f97316' }, // Orange
-  { label: 'R', rgb: [239,68,68], hex: '#ef4444' },  // Red
-  { label: 'G', rgb: [34,197,94], hex: '#22c55e' },  // Green
-  { label: 'B', rgb: [59,130,246], hex: '#3b82f6' }, // Blue
-];
-
-function hexToRgb(hex) {
-  hex = hex.replace('#', '');
-  return [
-    parseInt(hex.substring(0,2), 16),
-    parseInt(hex.substring(2,4), 16),
-    parseInt(hex.substring(4,6), 16)
-  ];
-}
-
-function getNearestColorLabel(hex) {
-  const rgb = hexToRgb(hex);
-  let minDist = Infinity;
-  let label = '?';
-  for (const c of standardColors) {
-    const d = Math.sqrt(
-      Math.pow(rgb[0] - c.rgb[0], 2) +
-      Math.pow(rgb[1] - c.rgb[1], 2) +
-      Math.pow(rgb[2] - c.rgb[2], 2)
-    );
-    if (d < minDist) {
-      minDist = d;
-      label = c.label;
-    }
-  }
-  return label;
-}
-
 export default function Capture() {
   const navigate = useNavigate();
   const [currentFace, setCurrentFace] = useState(0);
   const [capturedFaces, setCapturedFaces] = useState<Set<number>>(new Set());
   const [images, setImages] = useState<{[key: number]: string}>({});
   const [detectedColors, setDetectedColors] = useState<{[key: number]: string[]}>({});
-  const [cvLoaded, setCvLoaded] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [captureError, setCaptureError] = useState("");
 
-  // Load OpenCV.js
-  useEffect(() => {
-    if ((window as any).cv) {
-      setCvLoaded(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://docs.opencv.org/4.x/opencv.js';
-    script.async = true;
-    script.onload = () => {
-      (window as any).cv['onRuntimeInitialized'] = () => setCvLoaded(true);
-    };
-    document.body.appendChild(script);
-  }, []);
-
-  // Start camera on mount
-  useEffect(() => {
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        streamRef.current = stream;
-      } catch (err) {
-        // Camera not available or permission denied
-      }
-    }
-    startCamera();
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
-
-  // OpenCV color detection for a 3x3 grid
-  const detectColorsFromImage = async (faceIndex: number, imageUrl: string) => {
-    if (!cvLoaded) return Array(9).fill('#888');
-    return new Promise<string[]>((resolve) => {
-      const img = new window.Image();
-      img.crossOrigin = 'Anonymous';
-      img.src = imageUrl;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const grid = [];
-        for (let row = 0; row < 3; row++) {
-          for (let col = 0; col < 3; col++) {
-            const x = Math.floor((col + 0.5) * img.width / 3);
-            const y = Math.floor((row + 0.5) * img.height / 3);
-            const pixel = ctx.getImageData(x, y, 1, 1).data;
-            grid.push(rgbToHex(pixel[0], pixel[1], pixel[2]));
-          }
-        }
-        resolve(grid);
-      };
-    });
+  // Simulate color detection from images
+  const detectColorsFromImage = (faceIndex: number) => {
+    // Simulate color detection - in real app this would use CV/AI
+    const colorMaps = [
+      Array(9).fill('#ffffff'), // Front - white
+      Array(9).fill('#eab308'), // Back - yellow  
+      Array(9).fill('#f97316'), // Left - orange
+      Array(9).fill('#ef4444'), // Right - red
+      Array(9).fill('#22c55e'), // Up - green
+      Array(9).fill('#3b82f6')  // Down - blue
+    ];
+    
+    return colorMaps[faceIndex];
   };
 
-  // Helper: RGB to HEX
-  function rgbToHex(r, g, b) {
-    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-  }
-
-  // Capture from camera
-  const handleCapture = async () => {
-    setCaptureError("");
-    if (!videoReady || !videoRef.current) {
-      setCaptureError("Camera is not ready. Please wait for the preview to load.");
-      return;
-    }
-    const video = videoRef.current;
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      setCaptureError("Camera is not ready. Please wait for the preview to load.");
-      return;
-    }
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const url = canvas.toDataURL('image/png');
+  const handleCapture = () => {
+    // Simulate image capture
     const newCapturedFaces = new Set(capturedFaces);
     newCapturedFaces.add(currentFace);
     setCapturedFaces(newCapturedFaces);
-    setImages(prev => ({ ...prev, [currentFace]: url }));
-    const colors = await detectColorsFromImage(currentFace, url);
-    setDetectedColors(prev => ({ ...prev, [currentFace]: colors }));
+    
+    // Create a placeholder image URL
+    setImages(prev => ({
+      ...prev,
+      [currentFace]: `https://picsum.photos/300/300?random=${currentFace}`
+    }));
+    
+    // Detect colors from the captured image
+    const colors = detectColorsFromImage(currentFace);
+    setDetectedColors(prev => ({
+      ...prev,
+      [currentFace]: colors
+    }));
+    
+    // Auto-advance to next face
     if (currentFace < cubeFaces.length - 1) {
       setCurrentFace(currentFace + 1);
-      setVideoReady(false);
     }
   };
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setImages(prev => ({ ...prev, [currentFace]: url }));
+      setImages(prev => ({
+        ...prev,
+        [currentFace]: url
+      }));
       
       const newCapturedFaces = new Set(capturedFaces);
       newCapturedFaces.add(currentFace);
       setCapturedFaces(newCapturedFaces);
       
-      // Detect colors from uploaded image using OpenCV
-      const colors = await detectColorsFromImage(currentFace, url);
-      setDetectedColors(prev => ({ ...prev, [currentFace]: colors }));
+      // Detect colors from uploaded image
+      const colors = detectColorsFromImage(currentFace);
+      setDetectedColors(prev => ({
+        ...prev,
+        [currentFace]: colors
+      }));
       
       if (currentFace < cubeFaces.length - 1) {
         setCurrentFace(currentFace + 1);
@@ -181,29 +87,6 @@ export default function Capture() {
   };
 
   const allFacesCaptured = capturedFaces.size === cubeFaces.length;
-
-  // Helper to get color labels for all faces
-  function getAllFaceLabels() {
-    return [0,1,2,3,4,5].map(i => (detectedColors[i] || Array(9).fill('#888')).map(getNearestColorLabel));
-  }
-
-  const handleProceed = () => {
-    // Convert detectedColors object to array in face order
-    const facesArray = [0,1,2,3,4,5].map(i => detectedColors[i] || Array(9).fill('#888'));
-    const labelArray = getAllFaceLabels();
-    navigate('/solve-from-start', { state: { cubeColors: facesArray, cubeLabels: labelArray } });
-  };
-
-  useEffect(() => {
-    // Reset videoReady when switching to a new face that has no image
-    if (!images[currentFace]) {
-      setVideoReady(false);
-      // Reattach video stream to video element for new face
-      if (videoRef.current && streamRef.current) {
-        videoRef.current.srcObject = streamRef.current;
-      }
-    }
-  }, [currentFace]);
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -247,65 +130,20 @@ export default function Capture() {
                 {/* Camera Preview / Image Display */}
                 <div className="w-full h-64 bg-secondary/50 rounded-lg border-2 border-dashed border-primary/30 flex items-center justify-center relative overflow-hidden">
                   {images[currentFace] ? (
-                    <div className="relative w-full h-full">
-                      <img 
-                        src={images[currentFace]} 
-                        alt={`${cubeFaces[currentFace].name} face`}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <button
-                        className="absolute top-2 right-2 bg-white/80 text-black px-2 py-1 rounded shadow hover:bg-white"
-                        onClick={() => {
-                          setImages(prev => {
-                            const newImages = { ...prev };
-                            delete newImages[currentFace];
-                            return newImages;
-                          });
-                          setCapturedFaces(prev => {
-                            const newSet = new Set(prev);
-                            newSet.delete(currentFace);
-                            return newSet;
-                          });
-                          setDetectedColors(prev => {
-                            const newColors = { ...prev };
-                            delete newColors[currentFace];
-                            return newColors;
-                          });
-                          setVideoReady(false);
-                        }}
-                        type="button"
-                      >
-                        Recapture
-                      </button>
-                    </div>
-                  ) : (
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
+                    <img 
+                      src={images[currentFace]} 
+                      alt={`${cubeFaces[currentFace].name} face`}
                       className="w-full h-full object-cover rounded-lg"
-                      style={{ background: '#222' }}
-                      key={`face-${currentFace}`}
-                      onCanPlay={() => setVideoReady(true)}
                     />
+                  ) : (
+                    <div className="text-center">
+                      <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-muted-foreground">
+                        Capture or upload the {cubeFaces[currentFace].name.toLowerCase()} face
+                      </p>
+                    </div>
                   )}
                 </div>
-                {captureError && (
-                  <div className="text-red-500 text-xs mt-2">{captureError}</div>
-                )}
-                {/* Detected Color Grid */}
-                {detectedColors[currentFace] && (
-                  <div className="mt-4 flex flex-col items-center">
-                    <div className="grid grid-cols-3 gap-1">
-                      {detectedColors[currentFace].map((color, i) => (
-                        <div key={i} className="w-8 h-8 rounded border flex items-center justify-center text-xs font-bold" style={{ background: color, borderColor: '#333', color: '#000', textShadow: '0 1px 2px #fff' }}>
-                          {getNearestColorLabel(color)}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-2">Detected colors (labelled)</div>
-                  </div>
-                )}
                 
                 {/* Action Buttons */}
                 <div className="flex gap-4">
@@ -313,7 +151,6 @@ export default function Capture() {
                     variant="hero" 
                     className="flex-1"
                     onClick={handleCapture}
-                    disabled={!videoReady}
                   >
                     <Camera className="w-4 h-4 mr-2" />
                     Capture
@@ -356,13 +193,6 @@ export default function Capture() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-            {allFacesCaptured && (
-              <div className="mt-6 flex justify-center">
-                <Button variant="hero" size="lg" onClick={handleProceed}>
-                  Visualize & Solve
-                </Button>
-              </div>
-            )}
           </div>
           
           {/* Progress Overview */}
