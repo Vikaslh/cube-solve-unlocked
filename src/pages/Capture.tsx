@@ -64,7 +64,7 @@ export default function Capture() {
 
   // Load OpenCV.js
   useEffect(() => {
-    if (window.cv) {
+    if ((window as any).cv) {
       setCvLoaded(true);
       return;
     }
@@ -72,7 +72,7 @@ export default function Capture() {
     script.src = 'https://docs.opencv.org/4.x/opencv.js';
     script.async = true;
     script.onload = () => {
-      window.cv['onRuntimeInitialized'] = () => setCvLoaded(true);
+      (window as any).cv['onRuntimeInitialized'] = () => setCvLoaded(true);
     };
     document.body.appendChild(script);
   }, []);
